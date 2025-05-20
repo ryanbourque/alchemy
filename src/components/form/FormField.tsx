@@ -3,7 +3,7 @@ import TextInput from './TextInput';
 import NumberInput from './NumberInput';
 import DateTimeInput from './DateTimeInput';
 import CheckboxInput from './CheckboxInput';
-import SelectInput from './SelectInput';
+import SearchableSelect, { Option } from '../SearchableSelect';
 import { getRelatedObjectOptions } from '../../utils/dataUtils';
 interface FormFieldProps {
   field: {
@@ -11,35 +11,44 @@ interface FormFieldProps {
     label: string;
     type: string;
   };
-  value: any;
-  onChange: (id: string, value: any) => void;
-  relatedObjectType?: string;
+  value: unknown;
+  onChange: (id: string, value: unknown) => void;
 }
 const FormField: React.FC<FormFieldProps> = ({
   field,
   value,
-  onChange,
-  relatedObjectType
+  onChange
 }) => {
-  const handleChange = (newValue: any) => {
+  const handleChange = (newValue: unknown) => {
     onChange(field.id, newValue);
   };
   // Handle foreign key fields
   if (field.type === 'foreignKey') {
     const relatedType = field.id.replace('Id', 's');
     const options = getRelatedObjectOptions(relatedType);
-    return <SelectInput id={field.id} label={field.label} value={value} options={options} onChange={handleChange} />;
+    // map to SearchableSelect Option type
+    const items: Option[] = options.map(o => ({ id: o.value, label: o.label }));
+    return (
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+        <SearchableSelect
+          items={items}
+          placeholder={`Select ${field.label}`}
+          onSelect={opt => handleChange(opt.id)}
+        />
+      </div>
+    );
   }
   switch (field.type) {
     case 'integer':
     case 'decimal':
-      return <NumberInput id={field.id} label={field.label} value={value} onChange={handleChange} step={field.type === 'integer' ? 1 : 0.01} />;
+      return <NumberInput id={field.id} label={field.label} value={(value as number) ?? 0} onChange={handleChange} step={field.type === 'integer' ? 1 : 0.01} />;
     case 'date':
-      return <DateTimeInput id={field.id} label={field.label} value={value} onChange={handleChange} />;
+      return <DateTimeInput id={field.id} label={field.label} value={(value as string) ?? ''} onChange={handleChange} />;
     case 'checkbox':
-      return <CheckboxInput id={field.id} label={field.label} checked={value} onChange={handleChange} />;
+      return <CheckboxInput id={field.id} label={field.label} checked={Boolean(value)} onChange={handleChange} />;
     default:
-      return <TextInput id={field.id} label={field.label} value={value || ''} onChange={handleChange} />;
+      return <TextInput id={field.id} label={field.label} value={(value as string) || ''} onChange={handleChange} />;
   }
 };
 export default FormField;

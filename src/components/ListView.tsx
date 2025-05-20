@@ -21,7 +21,7 @@ const ListView: React.FC<ListViewProps> = ({
   const [pageSize, setPageSize] = useState(10);
   const fields = getObjectFields(objectTypeId);
   // Limit the number of columns displayed to prevent overflow
-  const displayFields = fields.slice(0, 6);
+  const displayFields = fields.filter(f => f.id !== 'id').slice(0, 6);
   // Filter data - simplified to only use search term
   const filteredData = data.filter(item => {
     return Object.values(item).some(value => {

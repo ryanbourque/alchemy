@@ -336,6 +336,7 @@ export const scaleInhibitorResiduals = [{
 }];
 // Coupon Analysis data
 export const couponAnalyses = [{
+  sampleId: 'sam1',
   id: 1,
   dateAnalyzed: "2023-10-20T09:30:00.000",
   dateIn: "2023-09-20T08:00:00.000",
@@ -381,6 +382,7 @@ export const couponAnalyses = [{
   hydrogenSulfideCorrosion: true,
   physicalDamage: false
 }, {
+  sampleId: 'sam2',
   id: 2,
   dateAnalyzed: "2023-10-25T10:15:00.000",
   dateIn: "2023-09-25T08:30:00.000",
@@ -409,7 +411,7 @@ export const couponAnalyses = [{
   calciumCarbonate: true,
   iron2Oxide: false,
   hydrocarbon: false,
-  silicates: true,
+  silicates: false,
   hydrogenSulfide: false,
   parrafin: false,
   ironSulfide: false,
@@ -417,9 +419,9 @@ export const couponAnalyses = [{
   mechanicalAbrasion: false,
   erosion: false,
   generalCorrosion: false,
-  localizedCorrosion: true,
+  localizedCorrosion: false,
   oxygenCorrosion: false,
-  slightPitting: true,
+  slightPitting: false,
   mildPitting: false,
   severePitting: false,
   carbonDioxideCorrosion: false,
