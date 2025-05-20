@@ -18,27 +18,6 @@ export const Dropdown = ({ items, onSelect }: Props) => {
   const [menuStyles, setMenuStyles] = useState<React.CSSProperties>({});
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
-//   useEffect(() => {
-//     const handleClickOutside = (event: MouseEvent) => {
-//       if (
-//         wrapperRef.current &&
-//         !wrapperRef.current.contains(event.target as Node)
-//       ) {
-//         setTimeout(() => {
-//           setIsOpen(false);
-//         }, 200);
-//       }
-//     };
-
-//     document.addEventListener("mousedown", handleClickOutside);
-//     return () => {
-//       setTimeout(() => {
-//         document.removeEventListener("mousedown", handleClickOutside);
-//       }, 200);
-//     };
-//   }, []);
-
   // Simulate async fetch by filtering local items
   useEffect(() => {
     setFiltered(

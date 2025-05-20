@@ -11,8 +11,7 @@ import {
   fetchMillipores,
   fetchCorrosionInhibitorResiduals,
   fetchScaleInhibitorResiduals,
-  fetchCouponAnalyses
-  ,
+  fetchCouponAnalyses,
   createAccount, updateAccount, deleteAccount,
   createFacility, updateFacility, deleteFacility,
   createSamplePoint, updateSamplePoint, deleteSamplePoint,
@@ -38,21 +37,19 @@ export interface ListViewConfig {
 export interface FieldConfig {
   name: string;
   label: string;
-  type?: 'text' | 'date' | 'checkbox' | 'foreignKey' | 'integer' | 'decimal';
-  optionsKey?: string; // for related object selects, reference key in mockData
+  type?: 'text' | 'date' | 'checkbox' | 'foreignKey' | 'integer' | 'decimal' | 'hidden';
+  optionsKey?: string;
 }
 export interface FormGroupConfig {
   groupLabel: string;
   fields: FieldConfig[];
 }
 
-// Generic form config item for a specific entity type
 export interface FormConfigItem<T = any> {
   menu: MenuConfig;
   listView: ListViewConfig;
   formLayout: FormGroupConfig[];
   fetcher?: () => Promise<T[]>;
-  // CRUD operations for the entity
   create?: (newItem: T) => Promise<T>;
   update?: (id: string, updatedData: Partial<T>) => Promise<boolean>;
   delete?: (id: string) => Promise<boolean>;
@@ -61,7 +58,7 @@ export interface FormConfigItem<T = any> {
 export const formConfig: Record<string, FormConfigItem<any>> = {
   accounts: {
     menu: { buttonName: 'Accounts' },
-    listView: { fields: ['name'] },
+    listView: { fields: ['id','name'] },
     formLayout: [
       {
         groupLabel: 'Account Details',
@@ -75,48 +72,10 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
     update: updateAccount,
     delete: deleteAccount
   },
-  facilities: {
-    menu: { buttonName: 'Facilities' },
-    listView: { fields: ['name'] },
-    formLayout: [
-      {
-        groupLabel: 'Facility Details',
-        fields: [
-          { name: 'name', label: 'Facility Name' }
-        ]
-      }
-    ],
-    fetcher: fetchFacilities,
-    create: createFacility,
-    update: updateFacility,
-    delete: deleteFacility
-  },
-  samplePoints: {
-    menu: { buttonName: 'Sample Points' },
-    listView: { fields: ['name', 'facilityId', 'location'] },
-    formLayout: [
-      {
-        groupLabel: 'Sample Point Details',
-        fields: [
-          { name: 'name', label: 'Point Name' }
-        ]
-      },
-      {
-        groupLabel: 'Location Information',
-        fields: [
-          { name: 'facilityId', label: 'Facility', type: 'foreignKey', optionsKey: 'facilities' },
-          { name: 'location', label: 'Location' }
-        ]
-      }
-    ],
-    fetcher: fetchSamplePoints,
-    create: createSamplePoint,
-    update: updateSamplePoint,
-    delete: deleteSamplePoint
-  },
+
   contacts: {
     menu: { buttonName: 'Contacts' },
-    listView: { fields: ['name', 'accountId'] },
+    listView: { fields: ['id','name','accountId'] },
     formLayout: [
       {
         groupLabel: 'Contact Information',
@@ -136,9 +95,57 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
     update: updateContact,
     delete: deleteContact
   },
+
+  facilities: {
+    menu: { buttonName: 'Facilities' },
+    listView: { fields: ['id','name'] },
+    formLayout: [
+      {
+        groupLabel: 'Facility Details',
+        fields: [
+          { name: 'name', label: 'Facility Name' }
+        ]
+      }
+    ],
+    fetcher: fetchFacilities,
+    create: createFacility,
+    update: updateFacility,
+    delete: deleteFacility
+  },
+
+  samplePoints: {
+    menu: { buttonName: 'Sample Points' },
+    listView: { fields: ['name','wellVessel','location','facilityId'] },
+    formLayout: [
+      {
+        groupLabel: 'Sample Point Details',
+        fields: [
+          { name: 'name', label: 'Point Name' }
+        ]
+      },
+      {
+        groupLabel: 'Location',
+        fields: [
+          { name: 'wellVessel', label: 'Well/Vessel' },
+          { name: 'location', label: 'Location' }
+        ]
+      },
+      {
+        groupLabel: 'Facility',
+        fields: [
+          { name: 'facilityId', label: 'Facility', type: 'foreignKey', optionsKey: 'facilities' }
+        ]
+      }
+    ],
+    fetcher: fetchSamplePoints,
+    create: createSamplePoint,
+    update: updateSamplePoint,
+    delete: deleteSamplePoint
+  },
+
   samples: {
     menu: { buttonName: 'Samples' },
-    listView: { fields: ['sampleId', 'facilityId', 'samplePointId', 'collectionDate'] },
+    listView: { fields: ['id','sampleId','facilityId','samplePointId','ownerId','facilitatorId','collectionDate','collectedById','dateReceivedByLab','completionDate'] },
     formLayout: [
       {
         groupLabel: 'Sample Identification',
@@ -151,13 +158,17 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
         fields: [
           { name: 'facilityId', label: 'Facility', type: 'foreignKey', optionsKey: 'facilities' },
           { name: 'samplePointId', label: 'Sample Point', type: 'foreignKey', optionsKey: 'samplePoints' },
-          { name: 'ownerId', label: 'Owner', type: 'foreignKey', optionsKey: 'accounts' }
+          { name: 'ownerId', label: 'Owner', type: 'foreignKey', optionsKey: 'accounts' },
+          { name: 'facilitatorId', label: 'Facilitator', type: 'foreignKey', optionsKey: 'accounts' },
+          { name: 'collectedById', label: 'Collected By', type: 'foreignKey', optionsKey: 'contacts' }
         ]
       },
       {
-        groupLabel: 'Collection Information',
+        groupLabel: 'Dates',
         fields: [
-          { name: 'collectionDate', label: 'Collection Date', type: 'date' }
+          { name: 'collectionDate', label: 'Collection Date', type: 'date' },
+          { name: 'dateReceivedByLab', label: 'Received by Lab', type: 'date' },
+          { name: 'completionDate', label: 'Completion Date', type: 'date' }
         ]
       }
     ],
@@ -166,22 +177,64 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
     update: updateSample,
     delete: deleteSample
   },
+
   waterAnalyses: {
     menu: { buttonName: 'Water Analyses', parentDropdown: 'Analyses' },
-    listView: { fields: ['sampleId', 'dateAnalyzed', 'ph', 'totalDissolvedSolids'] },
+    listView: {
+      fields: [
+        'id','sampleId','dateAnalyzed','bwpd','mcfd','ph','dissolvedCO2','dissolvedH2S',
+        'gasCO2','gasH2S','totalDissolvedSolids','chlorides','bicarbonates','ironTotal',
+        'manganese','barium','calcium','potassium','lithium','magnesium','sodium',
+        'phosphates','strontium','zinc','sulfates','specificGravity'
+      ]
+    },
     formLayout: [
       {
-        groupLabel: 'Analysis Information',
+        groupLabel: 'Identifiers',
+        fields: [{ name: 'id', label: 'ID', type: 'text' }]
+      },
+      {
+        groupLabel: 'Analysis Info',
         fields: [
           { name: 'sampleId', label: 'Sample ID', type: 'foreignKey', optionsKey: 'samples' },
           { name: 'dateAnalyzed', label: 'Date Analyzed', type: 'date' }
         ]
       },
       {
-        groupLabel: 'Measurements',
+        groupLabel: 'Basic Metrics',
         fields: [
+          { name: 'bwpd', label: 'BWPD', type: 'decimal' },
+          { name: 'mcfd', label: 'MCFD', type: 'decimal' },
           { name: 'ph', label: 'pH', type: 'decimal' },
-          { name: 'totalDissolvedSolids', label: 'Total Dissolved Solids', type: 'integer' }
+          { name: 'specificGravity', label: 'Specific Gravity', type: 'decimal' }
+        ]
+      },
+      {
+        groupLabel: 'Gas & Dissolved Gases',
+        fields: [
+          { name: 'dissolvedCO2', label: 'Dissolved CO₂', type: 'decimal' },
+          { name: 'dissolvedH2S', label: 'Dissolved H₂S', type: 'decimal' },
+          { name: 'gasCO2', label: 'Gas CO₂', type: 'decimal' },
+          { name: 'gasH2S', label: 'Gas H₂S', type: 'decimal' }
+        ]
+      },
+      {
+        groupLabel: 'Ions & Salts',
+        fields: [
+          { name: 'chlorides', label: 'Chlorides', type: 'decimal' },
+          { name: 'bicarbonates', label: 'Bicarbonates', type: 'decimal' },
+          { name: 'ironTotal', label: 'Iron Total', type: 'decimal' },
+          { name: 'manganese', label: 'Manganese', type: 'decimal' },
+          { name: 'barium', label: 'Barium', type: 'decimal' },
+          { name: 'calcium', label: 'Calcium', type: 'decimal' },
+          { name: 'potassium', label: 'Potassium', type: 'decimal' },
+          { name: 'lithium', label: 'Lithium', type: 'decimal' },
+          { name: 'magnesium', label: 'Magnesium', type: 'decimal' },
+          { name: 'sodium', label: 'Sodium', type: 'decimal' },
+          { name: 'phosphates', label: 'Phosphates', type: 'decimal' },
+          { name: 'strontium', label: 'Strontium', type: 'decimal' },
+          { name: 'zinc', label: 'Zinc', type: 'decimal' },
+          { name: 'sulfates', label: 'Sulfates', type: 'decimal' }
         ]
       }
     ],
@@ -190,12 +243,13 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
     update: updateWaterAnalysis,
     delete: deleteWaterAnalysis
   },
+
   oilAnalyses: {
     menu: { buttonName: 'Oil Analyses', parentDropdown: 'Analyses' },
-    listView: { fields: ['sampleId', 'dateAnalyzed', 'apiGravity', 'analysisCost'] },
+    listView: { fields: ['sampleId','dateAnalyzed','apiGravity','pourPoint'] },
     formLayout: [
       {
-        groupLabel: 'Analysis Information',
+        groupLabel: 'Analysis Info',
         fields: [
           { name: 'sampleId', label: 'Sample ID', type: 'foreignKey', optionsKey: 'samples' },
           { name: 'dateAnalyzed', label: 'Date Analyzed', type: 'date' }
@@ -210,7 +264,7 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
           { name: 'flowingTemperature', label: 'Flowing Temperature', type: 'decimal' },
           { name: 'totalWaxContent', label: 'Total Wax Content', type: 'decimal' },
           { name: 'waxAppearanceTemp', label: 'Wax Appearance Temp', type: 'decimal' },
-          { name: 'c16C120', label: 'C16-C120', type: 'decimal' },
+          { name: 'c16C120', label: 'C16–C120', type: 'decimal' },
           { name: 'appearance', label: 'Appearance' },
           { name: 'pourPoint', label: 'Pour Point', type: 'integer' }
         ]
@@ -227,12 +281,13 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
     update: updateOilAnalysis,
     delete: deleteOilAnalysis
   },
+
   bacteriaAnalyses: {
     menu: { buttonName: 'Bacteria Analyses', parentDropdown: 'Analyses' },
-    listView: { fields: ['sampleId', 'apbReadingDate', 'srbReadingDate', 'apbPositiveBottles'] },
+    listView: { fields: ['sampleId','apbReadingDate','srbReadingDate','apbPositiveBottles'] },
     formLayout: [
       {
-        groupLabel: 'Analysis Information',
+        groupLabel: 'Analysis Info',
         fields: [
           { name: 'sampleId', label: 'Sample ID', type: 'foreignKey', optionsKey: 'samples' },
           { name: 'apbReadingDate', label: 'APB Reading Date', type: 'date' },
@@ -259,12 +314,13 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
     update: updateBacteriaAnalysis,
     delete: deleteBacteriaAnalysis
   },
+
   atpBacteriaAnalyses: {
     menu: { buttonName: 'ATP Bacteria Analyses', parentDropdown: 'Analyses' },
-    listView: { fields: ['sampleId', 'dateAnalyzed', 'atpType', 'microbialEquivalent'] },
+    listView: { fields: ['sampleId','dateAnalyzed','atpType','microbialEquivalent'] },
     formLayout: [
       {
-        groupLabel: 'Analysis Information',
+        groupLabel: 'Analysis Info',
         fields: [
           { name: 'sampleId', label: 'Sample ID', type: 'foreignKey', optionsKey: 'samples' },
           { name: 'dateAnalyzed', label: 'Date Analyzed', type: 'date' },
@@ -284,7 +340,7 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
       {
         groupLabel: 'Microbial Equivalent',
         fields: [
-          { name: 'microbialEquivalent', label: 'Microbial Equivalent', type: 'integer' }
+          { name: 'microbialEquivalent', label: 'Microbial Equivalent', type: 'decimal' }
         ]
       }
     ],
@@ -293,12 +349,13 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
     update: updateAtpBacteriaAnalysis,
     delete: deleteAtpBacteriaAnalysis
   },
+
   millipores: {
     menu: { buttonName: 'Millipore Analyses', parentDropdown: 'Analyses' },
-    listView: { fields: ['sampleId', 'dateAnalyzed', 'volume', 'pressure'] },
+    listView: { fields: ['sampleId','dateAnalyzed','volume','pressure'] },
     formLayout: [
       {
-        groupLabel: 'Analysis Information',
+        groupLabel: 'Analysis Info',
         fields: [
           { name: 'sampleId', label: 'Sample ID', type: 'foreignKey', optionsKey: 'samples' },
           { name: 'dateAnalyzed', label: 'Date Analyzed', type: 'date' }
@@ -307,7 +364,7 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
       {
         groupLabel: 'Filtration Details',
         fields: [
-          { name: 'volume', label: 'Volume', type: 'integer' },
+          { name: 'volume', label: 'Volume', type: 'decimal' },
           { name: 'time', label: 'Time', type: 'decimal' },
           { name: 'pressure', label: 'Pressure', type: 'decimal' },
           { name: 'milliporeSize', label: 'Millipore Size', type: 'decimal' },
@@ -315,9 +372,14 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
         ]
       },
       {
-        groupLabel: 'Results',
+        groupLabel: 'Suspended Solids & Compositions',
         fields: [
-          { name: 'totalSuspendedSolids', label: 'Total Suspended Solids', type: 'decimal' }
+          { name: 'totalSuspendedSolids', label: 'Total Suspended Solids', type: 'decimal' },
+          { name: 'paraffinsOils', label: 'Paraffins & Oils', type: 'decimal' },
+          { name: 'asphaltenesAromatics', label: 'Asphaltenes & Aromatics', type: 'decimal' },
+          { name: 'carbonates', label: 'Carbonates', type: 'decimal' },
+          { name: 'ironCompounds', label: 'Iron Compounds', type: 'decimal' },
+          { name: 'acidInsolubles', label: 'Acid Insolubles', type: 'decimal' }
         ]
       }
     ],
@@ -326,12 +388,13 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
     update: updateMillipore,
     delete: deleteMillipore
   },
+
   corrosionInhibitorResiduals: {
     menu: { buttonName: 'Corrosion Inhibitor Residuals', parentDropdown: 'Analyses' },
-    listView: { fields: ['sampleId', 'dateAnalyzed', 'corrosionInhibitorResidual'] },
+    listView: { fields: ['sampleId','dateAnalyzed','corrosionInhibitorResidual'] },
     formLayout: [
       {
-        groupLabel: 'Analysis Information',
+        groupLabel: 'Analysis Info',
         fields: [
           { name: 'sampleId', label: 'Sample ID', type: 'foreignKey', optionsKey: 'samples' },
           { name: 'dateAnalyzed', label: 'Date Analyzed', type: 'date' }
@@ -344,7 +407,7 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
         ]
       },
       {
-        groupLabel: 'Residual Measurements',
+        groupLabel: 'Residual Measurement',
         fields: [
           { name: 'corrosionInhibitorResidual', label: 'Residual', type: 'decimal' }
         ]
@@ -355,12 +418,13 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
     update: updateCorrosionInhibitorResidual,
     delete: deleteCorrosionInhibitorResidual
   },
+
   scaleInhibitorResiduals: {
     menu: { buttonName: 'Scale Inhibitor Residuals', parentDropdown: 'Analyses' },
-    listView: { fields: ['sampleId', 'dateAnalyzed', 'scaleInhibitorResidual'] },
+    listView: { fields: ['sampleId','dateAnalyzed','scaleInhibitorResidual'] },
     formLayout: [
       {
-        groupLabel: 'Analysis Information',
+        groupLabel: 'Analysis Info',
         fields: [
           { name: 'sampleId', label: 'Sample ID', type: 'foreignKey', optionsKey: 'samples' },
           { name: 'dateAnalyzed', label: 'Date Analyzed', type: 'date' }
@@ -373,7 +437,7 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
         ]
       },
       {
-        groupLabel: 'Residual Measurements',
+        groupLabel: 'Residual Measurement',
         fields: [
           { name: 'scaleInhibitorResidual', label: 'Residual', type: 'decimal' }
         ]
@@ -384,39 +448,86 @@ export const formConfig: Record<string, FormConfigItem<any>> = {
     update: updateScaleInhibitorResidual,
     delete: deleteScaleInhibitorResidual
   },
+
   couponAnalyses: {
     menu: { buttonName: 'Coupon Analyses', parentDropdown: 'Analyses' },
-    listView: { fields: ['sampleId', 'dateAnalyzed', 'daysExposed'] },
+    listView: { fields: ['dateAnalyzed','couponType','daysExposed'] },
     formLayout: [
       {
-        groupLabel: 'Coupon Identification',
+        groupLabel: 'Identification & Dates',
         fields: [
-          { name: 'sampleId', label: 'Sample ID', type: 'foreignKey', optionsKey: 'samples' },
+          { name: 'dateAnalyzed', label: 'Date Analyzed', type: 'date' },
           { name: 'dateIn', label: 'Date In', type: 'date' },
           { name: 'dateOut', label: 'Date Out', type: 'date' },
           { name: 'couponType', label: 'Coupon Type' }
         ]
       },
       {
-        groupLabel: 'Exposure Details',
+        groupLabel: 'Exposure Metrics',
         fields: [
           { name: 'daysExposed', label: 'Days Exposed', type: 'integer' },
-          { name: 'couponSurfaceArea', label: 'Surface Area', type: 'integer' }
+          { name: 'couponSurfaceArea', label: 'Surface Area', type: 'decimal' }
         ]
       },
       {
         groupLabel: 'Weight Measurements',
         fields: [
-          { name: 'initialWeight', label: 'Initial Weight', type: 'integer' },
-          { name: 'finalWeight', label: 'Final Weight', type: 'integer' },
-          { name: 'receivedWeight', label: 'Received Weight', type: 'integer' },
-          { name: 'weightAfterXyleneWash', label: 'Weight After Wash', type: 'integer' }
+          { name: 'initialWeight', label: 'Initial Weight', type: 'decimal' },
+          { name: 'finalWeight', label: 'Final Weight', type: 'decimal' },
+          { name: 'receivedWeight', label: 'Received Weight', type: 'decimal' },
+          { name: 'weightAfterXyleneWash', label: 'Weight After Xylene Wash', type: 'decimal' },
+          { name: 'weightLossAfterXyleneWash', label: 'Weight Loss After Xylene Wash', type: 'decimal' },
+          { name: 'weightLossAfterHydrochloricWash', label: 'Weight Loss After HCl Wash', type: 'decimal' },
+          { name: 'overallWeightLoss', label: 'Overall Weight Loss', type: 'decimal' }
         ]
       },
       {
-        groupLabel: 'Corrosion Metrics',
+        groupLabel: 'Pit Depth Metrics',
         fields: [
-          { name: 'couponCorrosionFactor', label: 'Corrosion Factor', type: 'integer' }
+          { name: 'pitDepth1', label: 'Pit Depth 1', type: 'decimal' },
+          { name: 'pitDepth2', label: 'Pit Depth 2', type: 'decimal' },
+          { name: 'pitDepth3', label: 'Pit Depth 3', type: 'decimal' },
+          { name: 'avgPitDepth', label: 'Avg Pit Depth', type: 'decimal' },
+          { name: 'maxPitDepth', label: 'Max Pit Depth', type: 'decimal' }
+        ]
+      },
+      {
+        groupLabel: 'Pitting Rates & Corrosion',
+        fields: [
+          { name: 'avgPittingRate', label: 'Avg Pitting Rate', type: 'decimal' },
+          { name: 'maxPittingRate', label: 'Max Pitting Rate', type: 'decimal' },
+          { name: 'crMpy', label: 'Corrosion Rate (mpy)', type: 'decimal' }
+        ]
+      },
+      {
+        groupLabel: 'Deposition & Composition',
+        fields: [
+          { name: 'hydrocarbonDeposition', label: 'Hydrocarbon Deposition', type: 'decimal' },
+          { name: 'inorganicScaleDeposition', label: 'Inorganic Scale Deposition', type: 'decimal' },
+          { name: 'calciumCarbonate', label: 'Calcium Carbonate Present', type: 'checkbox' },
+          { name: 'iron2Oxide', label: 'Iron(II) Oxide Present', type: 'checkbox' },
+          { name: 'hydrocarbon', label: 'Hydrocarbon Present', type: 'checkbox' },
+          { name: 'silicates', label: 'Silicates Present', type: 'checkbox' },
+          { name: 'hydrogenSulfide', label: 'H₂S Present', type: 'checkbox' },
+          { name: 'parrafin', label: 'Paraffin Present', type: 'checkbox' },
+          { name: 'ironSulfide', label: 'Iron Sulfide Present', type: 'checkbox' },
+          { name: 'scale', label: 'Scale Present', type: 'checkbox' },
+          { name: 'mechanicalAbrasion', label: 'Mechanical Abrasion', type: 'checkbox' },
+          { name: 'erosion', label: 'Erosion', type: 'checkbox' }
+        ]
+      },
+      {
+        groupLabel: 'Localized Corrosion Modes',
+        fields: [
+          { name: 'generalCorrosion', label: 'General Corrosion', type: 'checkbox' },
+          { name: 'localizedCorrosion', label: 'Localized Corrosion', type: 'checkbox' },
+          { name: 'oxygenCorrosion', label: 'Oxygen Corrosion', type: 'checkbox' },
+          { name: 'slightPitting', label: 'Slight Pitting', type: 'checkbox' },
+          { name: 'mildPitting', label: 'Mild Pitting', type: 'checkbox' },
+          { name: 'severePitting', label: 'Severe Pitting', type: 'checkbox' },
+          { name: 'carbonDioxideCorrosion', label: 'CO₂ Corrosion', type: 'checkbox' },
+          { name: 'hydrogenSulfideCorrosion', label: 'H₂S Corrosion', type: 'checkbox' },
+          { name: 'physicalDamage', label: 'Physical Damage', type: 'checkbox' }
         ]
       }
     ],
