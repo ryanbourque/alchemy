@@ -1,10 +1,11 @@
 import React, { useState, createElement } from 'react';
 import { formatDate } from '../data/mockData';
 import { formatFieldLabel, getObjectFields, getRelatedObjectName } from '../utils/dataUtils';
+import { formConfig, FormConfigItem } from '../data/formConfig';
 import { SearchIcon, PlusIcon, ArrowUpDown, Download } from 'lucide-react';
 interface ListViewProps {
   objectTypeId: string;
-  data: any[];
+  data: Record<string, unknown>[];
   onRowClick: (id: string) => void;
   onNewClick: () => void;
 }
@@ -19,9 +20,14 @@ const ListView: React.FC<ListViewProps> = ({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const fields = getObjectFields(objectTypeId);
-  // Limit the number of columns displayed to prevent overflow
-  const displayFields = fields.filter(f => f.id !== 'id').slice(0, 6);
+  const allFields = getObjectFields(objectTypeId).filter(f => f.id !== 'id');
+  // Determine which fields to display based on formConfig listView
+  const configItem: FormConfigItem | undefined = formConfig[objectTypeId];
+  const displayFields = configItem
+    ? configItem.listView.fields
+        .map(id => allFields.find(f => f.id === id))
+        .filter((f): f is typeof allFields[0] => Boolean(f))
+    : allFields.slice(0, 6);
   // Filter data - simplified to only use search term
   const filteredData = data.filter(item => {
     return Object.values(item).some(value => {
@@ -32,31 +38,38 @@ const ListView: React.FC<ListViewProps> = ({
   // Sort data
   const sortedData = [...filteredData].sort((a, b) => {
     if (!sortField) return 0;
-    const aVal = a[sortField];
-    const bVal = b[sortField];
+    const aValRaw = a[sortField];
+    const bValRaw = b[sortField];
+    const aVal = aValRaw as string | number | null;
+    const bVal = bValRaw as string | number | null;
     if (aVal === bVal) return 0;
-    if (aVal === null) return 1;
-    if (bVal === null) return -1;
-    const comparison = aVal < bVal ? -1 : 1;
+    if (aVal === null || aVal === undefined) return 1;
+    if (bVal === null || bVal === undefined) return -1;
+    let comparison = 0;
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      comparison = aVal < bVal ? -1 : 1;
+    } else {
+      comparison = String(aVal).localeCompare(String(bVal));
+    }
     return sortDirection === 'asc' ? comparison : -comparison;
   });
   // Paginate data
   const totalPages = Math.ceil(sortedData.length / pageSize);
   const paginatedData = sortedData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   // Format cell value based on type
-  const formatCellValue = (value: any, fieldId: string) => {
+  const formatCellValue = (value: unknown, fieldId: string): string => {
     if (value === null || value === undefined) return '-';
-    const field = fields.find(f => f.id === fieldId);
+    const field = allFields.find(f => f.id === fieldId);
     if (!field) return String(value);
     if (fieldId.endsWith('Id')) {
       const relatedObjectType = fieldId.replace('Id', 's');
-      return getRelatedObjectName(relatedObjectType, value);
+      return getRelatedObjectName(relatedObjectType, String(value));
     }
     switch (field.type) {
       case 'date':
-        return formatDate(value);
+        return formatDate(String(value));
       case 'checkbox':
-        return value ? 'Yes' : 'No';
+        return (value as boolean) ? 'Yes' : 'No';
       default:
         return String(value);
     }
@@ -121,19 +134,26 @@ const ListView: React.FC<ListViewProps> = ({
                 <td colSpan={displayFields.length + 1} className="px-6 py-4 whitespace-nowrap text-center text-gray-500">
                   No data found
                 </td>
-              </tr> : paginatedData.map(item => <tr key={item.id} onClick={() => onRowClick(item.id)} className="hover:bg-gray-50 cursor-pointer">
-                  {displayFields.map(field => <td key={`${item.id}-${field.id}`} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatCellValue(item[field.id], field.id)}
-                    </td>)}
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={e => {
-                e.stopPropagation();
-                onRowClick(item.id);
-              }} className="text-blue-600 hover:text-blue-900">
-                      Edit
-                    </button>
-                  </td>
-                </tr>)}
+              </tr> : paginatedData.map(item => {
+                const id = String(item.id);
+                return (
+                  <tr key={id} onClick={() => onRowClick(id)} className="hover:bg-gray-50 cursor-pointer">
+                    {displayFields.map(field => (
+                      <td key={`${id}-${field.id}`} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatCellValue(item[field.id], field.id)}
+                      </td>
+                    ))}
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button onClick={e => {
+                        e.stopPropagation();
+                        onRowClick(id);
+                      }} className="text-blue-600 hover:text-blue-900">
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                );
+             })}
           </tbody>
         </table>
       </div>

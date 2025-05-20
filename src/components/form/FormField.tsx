@@ -5,12 +5,9 @@ import DateTimeInput from './DateTimeInput';
 import CheckboxInput from './CheckboxInput';
 import SearchableSelect, { Option } from '../SearchableSelect';
 import { getRelatedObjectOptions } from '../../utils/dataUtils';
+import { FieldConfig } from '../../data/formConfig';
 interface FormFieldProps {
-  field: {
-    id: string;
-    label: string;
-    type: string;
-  };
+  field: FieldConfig;
   value: unknown;
   onChange: (id: string, value: unknown) => void;
 }
@@ -20,11 +17,11 @@ const FormField: React.FC<FormFieldProps> = ({
   onChange
 }) => {
   const handleChange = (newValue: unknown) => {
-    onChange(field.id, newValue);
+    onChange(field.name, newValue);
   };
   // Handle foreign key fields
   if (field.type === 'foreignKey') {
-    const relatedType = field.id.replace('Id', 's');
+    const relatedType = field.optionsKey || field.name.replace('Id', 's');
     const options = getRelatedObjectOptions(relatedType);
     // map to SearchableSelect Option type
     const items: Option[] = options.map(o => ({ id: o.value, label: o.label }));
@@ -42,13 +39,13 @@ const FormField: React.FC<FormFieldProps> = ({
   switch (field.type) {
     case 'integer':
     case 'decimal':
-      return <NumberInput id={field.id} label={field.label} value={(value as number) ?? 0} onChange={handleChange} step={field.type === 'integer' ? 1 : 0.01} />;
+      return <NumberInput id={field.name} label={field.label} value={(value as number) ?? 0} onChange={handleChange} step={field.type === 'integer' ? 1 : 0.01} />;
     case 'date':
-      return <DateTimeInput id={field.id} label={field.label} value={(value as string) ?? ''} onChange={handleChange} />;
+      return <DateTimeInput id={field.name} label={field.label} value={(value as string) ?? ''} onChange={handleChange} />;
     case 'checkbox':
-      return <CheckboxInput id={field.id} label={field.label} checked={Boolean(value)} onChange={handleChange} />;
+      return <CheckboxInput id={field.name} label={field.label} checked={Boolean(value)} onChange={handleChange} />;
     default:
-      return <TextInput id={field.id} label={field.label} value={(value as string) || ''} onChange={handleChange} />;
+      return <TextInput id={field.name} label={field.label} value={(value as string) || ''} onChange={handleChange} />;
   }
 };
 export default FormField;

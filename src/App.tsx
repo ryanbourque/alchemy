@@ -1,21 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import TabNavigation from './components/TabNavigation';
 import ListView from './components/ListView';
 import DetailModal from './components/DetailModal';
 import Dashboard from './components/Dashboard';
 import { objectTypes } from './data/mockData';
-import { updateObject } from './utils/dataUtils';
+import { formConfig } from './data/formConfig';
 export function App() {
-  const [activeTab, setActiveTab] = useState('dashboard'); // Changed default to dashboard
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [dataList, setDataList] = useState<Record<string, unknown>[]>([]);
   const activeObjectType = objectTypes.find(type => type.id === activeTab);
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
     setSelectedObjectId(null);
     setIsModalOpen(false);
   };
+  // Fetch data when activeTab changes
+  useEffect(() => {
+    const configItem = formConfig[activeTab];
+    if (configItem?.fetcher) {
+      configItem.fetcher().then(items => setDataList(items));
+    } else {
+      setDataList([]);
+    }
+  }, [activeTab]);
   const handleRowClick = (id: string) => {
     setSelectedObjectId(id);
     setIsModalOpen(true);
@@ -28,22 +38,37 @@ export function App() {
     setIsModalOpen(false);
     setSelectedObjectId(null);
   };
-  const handleSaveChanges = (updatedData: any) => {
+  const handleSaveChanges = async (updatedData: Record<string, unknown>) => {
     if (activeTab) {
-      if (selectedObjectId) {
-        updateObject(activeTab, selectedObjectId, updatedData);
-      } else {
-        // Handle new object creation here
-        console.log('Creating new object:', updatedData);
+      const configItem = formConfig[activeTab];
+      if (configItem) {
+        if (selectedObjectId) {
+          await configItem.update?.(selectedObjectId, updatedData);
+        } else {
+          await configItem.create?.(updatedData);
+        }
+        const items = await configItem.fetcher?.();
+        setDataList(items || []);
       }
       setIsModalOpen(false);
       setSelectedObjectId(null);
     }
   };
-  const getSelectedObjectData = () => {
-    if (!activeObjectType) return null;
+  // Delete handler
+  const handleDelete = async () => {
+    const configItem = formConfig[activeTab];
+    if (configItem && selectedObjectId) {
+      await configItem.delete?.(selectedObjectId);
+      const items = await configItem.fetcher?.();
+      setDataList(items || []);
+    }
+    setIsModalOpen(false);
+    setSelectedObjectId(null);
+  };
+  const getSelectedObjectData = (): Record<string, unknown> => {
     if (!selectedObjectId) return {};
-    return activeObjectType.data.find((item: any) => item.id === selectedObjectId);
+    const item = dataList.find(obj => String(obj['id']) === selectedObjectId);
+    return item || {};
   };
   return <Layout>
       <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
@@ -53,8 +78,8 @@ export function App() {
             <h2 className="text-lg font-medium text-gray-900 mb-2">
               {activeObjectType.label}
             </h2>
-            <ListView objectTypeId={activeTab} data={activeObjectType.data} onRowClick={handleRowClick} onNewClick={handleNewClick} />
+            <ListView objectTypeId={activeTab} data={dataList} onRowClick={handleRowClick} onNewClick={handleNewClick} />
           </div>}
-      {isModalOpen && <DetailModal objectTypeId={activeTab} objectData={getSelectedObjectData()} onClose={handleCloseModal} onSave={handleSaveChanges} />}
+      {isModalOpen && <DetailModal objectTypeId={activeTab} objectData={getSelectedObjectData()} onClose={handleCloseModal} onSave={handleSaveChanges} onDelete={selectedObjectId ? handleDelete : undefined} />}
     </Layout>;
 }

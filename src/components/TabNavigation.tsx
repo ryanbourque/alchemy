@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { objectTypes } from '../data/mockData';
+import { formConfig, FormConfigItem } from '../data/formConfig';
 import { ChevronDownIcon, LayoutDashboard } from 'lucide-react';
 import { createPortal } from 'react-dom';
 interface TabNavigationProps {
@@ -16,10 +16,18 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
     left: 0
   });
   const buttonRef = useRef<HTMLButtonElement>(null);
-  // Separate analyses from other objects
-  const analyses = ['waterAnalyses', 'oilAnalyses', 'bacteriaAnalyses', 'atpBacteriaAnalyses', 'millipores', 'corrosionInhibitorResiduals', 'scaleInhibitorResiduals', 'couponAnalyses'];
-  const mainObjects = objectTypes.filter(type => !analyses.includes(type.id));
-  const analysesObjects = objectTypes.filter(type => analyses.includes(type.id));
+  // Build navigation from formConfig, grouping by optional parentDropdown
+  const configEntries = Object.entries(formConfig) as [string, FormConfigItem][];
+  const mainEntries = configEntries.filter(([, item]) => !item.menu.parentDropdown);
+  const dropdownGroups = configEntries.reduce((acc, [id, item]) => {
+    const parent = item.menu.parentDropdown;
+    if (parent) {
+      acc[parent] = acc[parent] || [];
+      acc[parent].push([id, item] as [string, FormConfigItem]);
+    }
+    return acc;
+  }, {} as Record<string, [string, FormConfigItem][]>);
+  const analysesEntries = dropdownGroups['Analyses'] || [];
   // Update dropdown position when button is clicked
   const updateDropdownPosition = () => {
     if (buttonRef.current) {
@@ -55,10 +63,10 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
             <LayoutDashboard className="h-4 w-4" />
             <span>Dashboard</span>
           </button>
-          {mainObjects.map(objectType => <button key={objectType.id} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === objectType.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`} onClick={() => onTabChange(objectType.id)}>
-              {objectType.label}
+          {mainEntries.map(([id, item]) => <button key={id} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === id ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`} onClick={() => onTabChange(id)}>
+              {item.menu.buttonName}
             </button>)}
-          <button ref={buttonRef} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-1 ${analysesObjects.some(obj => obj.id === activeTab) ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`} onClick={() => setIsAnalysesOpen(!isAnalysesOpen)}>
+          <button ref={buttonRef} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-1 ${analysesEntries.some(([id]) => id === activeTab) ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`} onClick={() => setIsAnalysesOpen(!isAnalysesOpen)}>
             <span>Analyses</span>
             <ChevronDownIcon className="h-4 w-4" />
           </button>
@@ -69,11 +77,11 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
       left: `${dropdownPosition.left}px`
     }}>
             <div className="mt-1 w-56 bg-white border border-gray-200 rounded-md shadow-lg">
-              {analysesObjects.map(objectType => <button key={objectType.id} className={`block w-full text-left px-4 py-2 text-sm ${activeTab === objectType.id ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'}`} onClick={() => {
-          onTabChange(objectType.id);
+              {analysesEntries.map(([id, item]) => <button key={id} className={`block w-full text-left px-4 py-2 text-sm ${activeTab === id ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'}`} onClick={() => {
+          onTabChange(id);
           setIsAnalysesOpen(false);
         }}>
-                  {objectType.label}
+                  {item.menu.buttonName}
                 </button>)}
             </div>
           </div>, document.body)}

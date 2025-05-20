@@ -427,7 +427,8 @@ export const couponAnalyses = [{
   carbonDioxideCorrosion: false,
   hydrogenSulfideCorrosion: false,
   physicalDamage: false
-}];
+}]; // end couponAnalyses
+
 // Define the structure for the object types
 export const objectTypes = [{
   id: "accounts",
@@ -483,11 +484,14 @@ export const objectTypes = [{
   data: couponAnalyses
 }];
 // Helper function to get related object name
-export const getRelatedObjectName = (objectId: string, relatedId: string) => {
+export const getRelatedObjectName = (objectId: string, relatedId: string): string => {
   const objectType = objectTypes.find(type => type.id === objectId);
   if (!objectType) return "Unknown";
-  const relatedObject = objectType.data.find((item: any) => item.id === relatedId);
-  return relatedObject ? relatedObject.name : "Unknown";
+  const items = objectType.data as Record<string, unknown>[];
+  const relatedObject = items.find(item => item.id === relatedId) as Record<string, unknown> | undefined;
+  if (!relatedObject) return "Unknown";
+  const name = relatedObject["name"];
+  return typeof name === 'string' ? name : String(relatedId);
 };
 // Helper function to format dates
 export const formatDate = (dateString: string) => {
