@@ -439,7 +439,7 @@ export const objectTypes = [{
   label: "Facilities",
   data: facilities
 }, {
-  id: "samplePoints",
+  id: "samplepoints",
   label: "Sample Points",
   data: samplePoints
 }, {

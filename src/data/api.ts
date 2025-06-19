@@ -1,6 +1,4 @@
 import {
-    accounts,
-    facilities,
     samplePoints,
     contacts,
     samples,
@@ -24,18 +22,7 @@ const simulateDelay = (ms: number, label = ''): Promise<void> => {
 };
 
 // Fetch functions
-export const fetchAccounts = async (): Promise<typeof accounts> => {
-  console.log('[API] fetchAccounts called');
-  await simulateDelay(300, 'fetchAccounts');
-  console.log('[API] fetchAccounts returned', accounts);
-  return accounts;
-};
-export const fetchFacilities = async (): Promise<typeof facilities> => {
-  console.log('[API] fetchFacilities called');
-  await simulateDelay(300, 'fetchFacilities');
-  console.log('[API] fetchFacilities returned', facilities);
-  return facilities;
-};
+
 export const fetchSamplePoints = async (): Promise<typeof samplePoints> => {
   console.log('[API] fetchSamplePoints called');
   await simulateDelay(300, 'fetchSamplePoints');
@@ -103,71 +90,6 @@ export const fetchCouponAnalyses = async (): Promise<typeof couponAnalyses> => {
   return couponAnalyses;
 };
 
-// Simulated CRUD operations for each resource
-// Accounts
-export const createAccount = async (newItem: typeof accounts[number]): Promise<typeof accounts[number]> => {
-  console.log('[API] createAccount called with payload', newItem);
-  await simulateDelay(300, 'createAccount');
-  accounts.push(newItem);
-  console.log('[API] createAccount completed');
-  return newItem;
-};
-export const updateAccount = async (id: string, updatedData: Partial<typeof accounts[number]>): Promise<boolean> => {
-  console.log('[API] updateAccount called with id', id, 'and payload', updatedData);
-  await simulateDelay(300, 'updateAccount');
-  const idx = accounts.findIndex(item => item.id === id);
-  if (idx === -1) {
-    console.log('[API] updateAccount failed: id not found');
-    return false;
-  }
-  accounts[idx] = { ...accounts[idx], ...updatedData };
-  console.log('[API] updateAccount succeeded');
-  return true;
-};
-export const deleteAccount = async (id: string): Promise<boolean> => {
-  console.log('[API] deleteAccount called with id', id);
-  await simulateDelay(300, 'deleteAccount');
-  const idx = accounts.findIndex(item => item.id === id);
-  if (idx === -1) {
-    console.log('[API] deleteAccount failed: id not found');
-    return false;
-  }
-  accounts.splice(idx, 1);
-  console.log('[API] deleteAccount succeeded');
-  return true;
-};
-// Facilities
-export const createFacility = async (newItem: typeof facilities[number]): Promise<typeof facilities[number]> => {
-  console.log('[API] createFacility called with payload', newItem);
-  await simulateDelay(300, 'createFacility');
-  facilities.push(newItem);
-  console.log('[API] createFacility completed');
-  return newItem;
-};
-export const updateFacility = async (id: string, updatedData: Partial<typeof facilities[number]>): Promise<boolean> => {
-  console.log('[API] updateFacility called with id', id, 'and payload', updatedData);
-  await simulateDelay(300, 'updateFacility');
-  const idx = facilities.findIndex(item => item.id === id);
-  if (idx === -1) {
-    console.log('[API] updateFacility failed: id not found');
-    return false;
-  }
-  facilities[idx] = { ...facilities[idx], ...updatedData };
-  console.log('[API] updateFacility succeeded');
-  return true;
-};
-export const deleteFacility = async (id: string): Promise<boolean> => {
-  console.log('[API] deleteFacility called with id', id);
-  await simulateDelay(300, 'deleteFacility');
-  const idx = facilities.findIndex(item => item.id === id);
-  if (idx === -1) {
-    console.log('[API] deleteFacility failed: id not found');
-    return false;
-  }
-  facilities.splice(idx, 1);
-  console.log('[API] deleteFacility succeeded');
-  return true;
-};
 // Sample Points
 export const createSamplePoint = async (newItem: typeof samplePoints[number]): Promise<typeof samplePoints[number]> => {
   console.log('[API] createSamplePoint called with payload', newItem);

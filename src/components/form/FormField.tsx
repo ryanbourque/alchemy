@@ -3,7 +3,7 @@ import TextInput from './TextInput';
 import NumberInput from './NumberInput';
 import DateTimeInput from './DateTimeInput';
 import CheckboxInput from './CheckboxInput';
-import SearchableSelect, { Option } from '../SearchableSelect';
+import { SearchableSelect, Option } from '../form/SearchableSelect';
 import { getRelatedObjectOptions } from '../../utils/dataUtils';
 import { FieldConfig } from '../../data/formConfig';
 interface FormFieldProps {
@@ -29,9 +29,11 @@ const FormField: React.FC<FormFieldProps> = ({
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
         <SearchableSelect
-          items={items}
+          value={items.find(i => i.id === value)}
+          options={items}
+          onSelect={(opt: Option) => handleChange(opt.id)}
+          onSearch={async (query: string) => items.filter(opt => opt.label.toLowerCase().includes(query.toLowerCase()))}
           placeholder={`Select ${field.label}`}
-          onSelect={opt => handleChange(opt.id)}
         />
       </div>
     );

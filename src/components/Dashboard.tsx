@@ -4,7 +4,7 @@ import { samples, waterAnalyses, bacteriaAnalyses, facilities, couponAnalyses, a
 import { Activity, Droplet, AlertTriangle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import SearchableSelect, { Option } from './SearchableSelect';
+import { SearchableSelect, Option } from '../components/form/SearchableSelect'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 const Dashboard: React.FC = () => {
@@ -15,6 +15,8 @@ const Dashboard: React.FC = () => {
     { id: 'all', label: 'All Accounts' },
     ...accounts.map(acc => ({ id: acc.id, label: acc.name }))
   ];
+  // Find the selected account option for value prop
+  const selectedAccountOption = accountOptions.find(opt => opt.id === selectedAccount);
   // Filter samples by selected account
   const filteredSamples = selectedAccount === 'all' ? samples : samples.filter(sample => sample.ownerId === selectedAccount);
   const filteredSampleIds = new Set(filteredSamples.map(s => s.id));
@@ -70,9 +72,11 @@ const Dashboard: React.FC = () => {
       <div className="flex items-center justify-between mb-4 space-x-4">
         <div className="w-1/3">
           <SearchableSelect
-            items={accountOptions}
+            value={selectedAccountOption}
+            options={accountOptions}
+            onSelect={(opt: Option) => setSelectedAccount(opt.id)}
+            onSearch={async (query: string) => accountOptions.filter(opt => opt.label.toLowerCase().includes(query.toLowerCase()))}
             placeholder="Select Account"
-            onSelect={opt => setSelectedAccount(opt.id)}
           />
         </div>
         <button onClick={handleDownloadPDF} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">

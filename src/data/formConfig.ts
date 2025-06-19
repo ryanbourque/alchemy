@@ -1,8 +1,5 @@
 import {
-  fetchAccounts,
-  fetchFacilities,
   fetchSamplePoints,
-  fetchContacts,
   fetchSamples,
   fetchWaterAnalyses,
   fetchOilAnalyses,
@@ -12,10 +9,7 @@ import {
   fetchCorrosionInhibitorResiduals,
   fetchScaleInhibitorResiduals,
   fetchCouponAnalyses,
-  createAccount, updateAccount, deleteAccount,
-  createFacility, updateFacility, deleteFacility,
   createSamplePoint, updateSamplePoint, deleteSamplePoint,
-  createContact, updateContact, deleteContact,
   createSample, updateSample, deleteSample,
   createWaterAnalysis, updateWaterAnalysis, deleteWaterAnalysis,
   createOilAnalysis, updateOilAnalysis, deleteOilAnalysis,
@@ -49,69 +43,14 @@ export interface FormConfigItem<T = any> {
   menu: MenuConfig;
   listView: ListViewConfig;
   formLayout: FormGroupConfig[];
-  fetcher?: () => Promise<T[]>;
+  // fetcher can accept optional pagination parameters (page, pageSize)
+  fetcher?: (page?: number, pageSize?: number) => Promise<T[]>;
   create?: (newItem: T) => Promise<T>;
   update?: (id: string, updatedData: Partial<T>) => Promise<boolean>;
   delete?: (id: string) => Promise<boolean>;
 }
 
 export const formConfig: Record<string, FormConfigItem<any>> = {
-  accounts: {
-    menu: { buttonName: 'Accounts' },
-    listView: { fields: ['id','name'] },
-    formLayout: [
-      {
-        groupLabel: 'Account Details',
-        fields: [
-          { name: 'name', label: 'Account Name' }
-        ]
-      }
-    ],
-    fetcher: fetchAccounts,
-    create: createAccount,
-    update: updateAccount,
-    delete: deleteAccount
-  },
-
-  contacts: {
-    menu: { buttonName: 'Contacts' },
-    listView: { fields: ['id','name','accountId'] },
-    formLayout: [
-      {
-        groupLabel: 'Contact Information',
-        fields: [
-          { name: 'name', label: 'Contact Name' }
-        ]
-      },
-      {
-        groupLabel: 'Account Association',
-        fields: [
-          { name: 'accountId', label: 'Account', type: 'foreignKey', optionsKey: 'accounts' }
-        ]
-      }
-    ],
-    fetcher: fetchContacts,
-    create: createContact,
-    update: updateContact,
-    delete: deleteContact
-  },
-
-  facilities: {
-    menu: { buttonName: 'Facilities' },
-    listView: { fields: ['id','name'] },
-    formLayout: [
-      {
-        groupLabel: 'Facility Details',
-        fields: [
-          { name: 'name', label: 'Facility Name' }
-        ]
-      }
-    ],
-    fetcher: fetchFacilities,
-    create: createFacility,
-    update: updateFacility,
-    delete: deleteFacility
-  },
 
   samplePoints: {
     menu: { buttonName: 'Sample Points' },
